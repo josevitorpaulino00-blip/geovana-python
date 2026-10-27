@@ -377,40 +377,35 @@ function lashArt(slug){
 function show(i){
   cur=i; const e=EST[i], ph=$('#phWrap'), info=$('#info');
   document.querySelectorAll('#tabs .pill').forEach((p,k)=>p.classList.toggle('on',k===i));
-  // texto com fade suave (some → troca → aparece)
+
+  // começa o fade-out do texto junto
   info.classList.add('out');
-  setTimeout(()=>{
+
+  // crossfade da foto + texto sincronizados
+  const src=localPics[e.slug]||IMG+e.slug+'.jpg';
+  const im=new Image(); im.className='pic'; im.alt=e.nome;
+  let done=false;
+  const finish=(ok)=>{
+    if(done)return; done=true;
+
+    // atualiza o texto ainda invisível
     $('#cnt').textContent='0'+(i+1)+' / 0'+EST.length;
     $('#iTag').textContent=e.tag; $('#iNome').textContent=e.nome; $('#iDesc').textContent=e.desc;
     $('#ideal').innerHTML=e.ideal.map(t=>`<span>${t}</span>`).join('');
     $('#meters').innerHTML=e.m.map((v,k)=>`<div class="mt"><span>${ML[k]}</span><i><b data-w="${v}"></b></i><span>${v}%</span></div>`).join('');
-    // pequeno delay para o browser aplicar o conteúdo novo ainda invisível
-    requestAnimationFrame(()=>{
-      info.classList.remove('out');
-      requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('.mt b').forEach(b=>b.style.width=b.dataset.w+'%')));
-    });
-  },450);
 
-  // crossfade da foto
-  const src=localPics[e.slug]||IMG+e.slug+'.jpg';
-  const im=new Image(); im.className='pic'; im.alt=e.nome;
-  const finish=(ok)=>{
-    // garante SVG de fundo (só aparece se não tiver foto)
+    // foto
     if(!ph.querySelector('.art')){
       ph.insertAdjacentHTML('afterbegin',`<svg class="art" viewBox="0 0 300 375">${lashArt(e.slug)}</svg><span class="soon">Foto em breve</span>`);
     }
     if(ok){
-      // tira o .on das fotos antigas para elas começarem a sumir
       ph.querySelectorAll('.pic.on').forEach(p=>p.classList.remove('on'));
       ph.appendChild(im);
-      // força reflow e ativa o fade-in
       void im.offsetWidth;
       im.classList.add('on');
       ph.classList.add('has');
-      // remove fotos antigas depois do crossfade
       setTimeout(()=>{
         ph.querySelectorAll('.pic:not(.on)').forEach(p=>p.remove());
-        // atualiza o art para o estilo atual (caso a foto suma no futuro)
         const art=ph.querySelector('.art');
         if(art) art.outerHTML=`<svg class="art" viewBox="0 0 300 375">${lashArt(e.slug)}</svg>`;
       },750);
@@ -420,6 +415,12 @@ function show(i){
       if(art) art.outerHTML=`<svg class="art" viewBox="0 0 300 375">${lashArt(e.slug)}</svg>`;
       else ph.insertAdjacentHTML('afterbegin',`<svg class="art" viewBox="0 0 300 375">${lashArt(e.slug)}</svg><span class="soon">Foto em breve</span>`);
     }
+
+    // fade-in do texto no mesmo momento da foto
+    requestAnimationFrame(()=>{
+      info.classList.remove('out');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('.mt b').forEach(b=>b.style.width=b.dataset.w+'%')));
+    });
   };
   im.onload=()=>finish(true);
   im.onerror=()=>finish(false);
