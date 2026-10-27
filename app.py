@@ -54,6 +54,10 @@ def home():
     has_photo = os.path.exists(os.path.join(BASE, "static", "foto.jpg"))
     return render_template_string(PAGE, cfg=CONFIG, has_photo=has_photo)
 
+@app.route("/health")
+def health():
+    return "OK", 200
+
 
 @app.post("/api/mensagem")
 def mensagem():
